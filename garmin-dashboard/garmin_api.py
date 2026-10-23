@@ -60,11 +60,11 @@ def get_token(force=False):
         saved = json.loads(TOKEN_FILE.read_text())
         if time.time() - saved.get("created", 0) < TOKEN_MAX_AGE:
             return saved["token"]
+    # With no local key, a cloud session's network secret adds the header for us.
     key = read_key()
-    if not key:
-        raise SystemExit("Your API key is not set in .env.local.")
+    headers = {"Authorization": "ApiKey " + key} if key else {}
     try:
-        token = _request(TOKEN_URL, "POST", {"Authorization": "ApiKey " + key}).strip()
+        token = _request(TOKEN_URL, "POST", headers).strip()
     except ApiError as e:
         raise SystemExit(
             f"Garmin refused the key ({e}). It may be missing, mistyped or expired: "
