@@ -1,0 +1,656 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hyrox Training Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Barlow+Semi+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  color-scheme: dark;
+  --bg: #08090a;
+  --card: #121315;
+  --card-2: #18191c;
+  --line: #24262a;
+  --grid: #1e2023;
+  --text: #f0efec;
+  --text-2: #a9a8a1;
+  --muted: #6f6e69;
+  --run: #3987e5;
+  --hiit: #d95926;
+  --strength: #199e70;
+  --other: #c98500;
+  --fitness: #9085e9;
+  --fatigue: #d55181;
+  --signal: #e8e6df;
+  --good: #0ca30c;
+  --warning: #fab219;
+  --serious: #ec835a;
+  --critical: #d03b3b;
+  --num: "Barlow Semi Condensed", "Arial Narrow", system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--text); }
+body {
+  font: 14px/1.45 Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: 1240px; margin: 0 auto; padding: 28px 24px 60px; }
+header { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 22px; }
+.eyebrow { font: 600 12px/1 Inter, sans-serif; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+h1 { font: 700 34px/1.05 var(--num); letter-spacing: .02em; margin: 6px 0 0; text-transform: uppercase; }
+h1 span { color: var(--muted); font-weight: 500; }
+.meta { color: var(--text-2); font-size: 12px; text-align: right; }
+.chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border: 1px solid var(--line); border-radius: 999px; color: var(--text-2); font-size: 12px; margin-left: 6px; }
+.chip b { color: var(--text); font-weight: 600; }
+
+h2 { font: 600 12px/1 Inter, sans-serif; letter-spacing: .16em; text-transform: uppercase; color: var(--text-2); margin: 34px 0 12px; }
+.grid { display: grid; gap: 14px; }
+.g3 { grid-template-columns: 1.15fr 1fr 1fr; }
+.g2 { grid-template-columns: 1fr 1fr; }
+.g4 { grid-template-columns: repeat(4, 1fr); }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 18px 18px 14px; min-width: 0; }
+.card h3 { margin: 0; font-size: 14px; font-weight: 600; }
+.card .sub { color: var(--text-2); font-size: 12px; margin: 3px 0 10px; }
+.big { font: 700 64px/0.9 var(--num); letter-spacing: -.01em; }
+.big small { font-size: 22px; color: var(--text-2); font-weight: 500; margin-left: 4px; letter-spacing: 0; }
+.label { font-size: 12px; color: var(--text-2); }
+
+/* race card */
+.race-next { display: flex; align-items: flex-end; gap: 14px; margin: 10px 0 14px; }
+.race-list { display: grid; gap: 6px; margin-top: 12px; }
+.race-row { display: flex; justify-content: space-between; font-size: 13px; padding: 8px 10px; background: var(--card-2); border-radius: 10px; }
+.race-row span:last-child { color: var(--text-2); }
+.timeline { position: relative; height: 34px; margin-top: 6px; }
+.timeline .bar { position: absolute; left: 0; right: 0; top: 14px; height: 4px; border-radius: 2px; background: var(--line); }
+.timeline .taper { position: absolute; top: 14px; height: 4px; background: var(--warning); opacity: .8; border-radius: 2px; }
+.timeline .dot { position: absolute; top: 9px; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%; background: var(--text); border: 3px solid var(--card); }
+.timeline .now { position: absolute; top: 6px; width: 2px; height: 20px; background: var(--text-2); }
+.timeline .tl { position: absolute; top: 28px; font-size: 10px; color: var(--muted); transform: translateX(-50%); white-space: nowrap; }
+
+/* readiness */
+.ready { display: flex; gap: 16px; align-items: center; }
+.ring { flex: 0 0 auto; }
+.ring text { font-family: var(--num); }
+.parts { flex: 1; display: grid; gap: 7px; min-width: 0; }
+.part { display: grid; grid-template-columns: 92px 1fr 30px; align-items: center; gap: 8px; font-size: 12px; color: var(--text-2); }
+.part .track { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.part .fill { height: 100%; border-radius: 3px; background: var(--signal); }
+.part b { color: var(--text); font-weight: 600; text-align: right; }
+.status { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 13px; }
+.status i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+.advice { margin-top: 12px; padding: 10px 12px; background: var(--card-2); border-radius: 10px; font-size: 13px; color: var(--text-2); }
+.advice b { color: var(--text); }
+
+/* tiles */
+.tile .big { font-size: 44px; }
+.delta { font-size: 12px; color: var(--text-2); margin-top: 6px; }
+.delta b { color: var(--text); font-weight: 600; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: var(--text-2); margin: 0 0 6px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+.legend i.ln { height: 3px; border-radius: 2px; width: 14px; }
+.chart { width: 100%; position: relative; }
+.chart svg { display: block; overflow: visible; }
+.chart text { fill: var(--muted); font-size: 11px; font-family: Inter, sans-serif; }
+
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; font-weight: 500; color: var(--muted); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+td { padding: 9px 8px; border-bottom: 1px solid var(--grid); }
+td.n, th.n { text-align: right; }
+tr:last-child td { border-bottom: 0; }
+.sw { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 8px; }
+
+.records { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
+.rec { background: var(--card-2); border-radius: 12px; padding: 12px 14px; }
+.rec .v { font: 700 28px/1.1 var(--num); margin: 4px 0 2px; }
+.rec .w { font-size: 11px; color: var(--muted); }
+
+#tip { position: fixed; pointer-events: none; z-index: 10; display: none; background: #1f2124; border: 1px solid #34363b; border-radius: 10px; padding: 9px 11px; font-size: 12px; color: var(--text); box-shadow: 0 8px 24px rgba(0,0,0,.5); min-width: 150px; max-width: 260px; }
+#tip .t { color: var(--text-2); margin-bottom: 5px; font-weight: 500; }
+#tip .r { display: flex; justify-content: space-between; gap: 14px; }
+#tip .r span:first-child { display: inline-flex; align-items: center; gap: 6px; color: var(--text-2); }
+#tip i { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }
+footer { color: var(--muted); font-size: 12px; margin-top: 36px; line-height: 1.6; }
+
+@media (max-width: 980px) { .g3 { grid-template-columns: 1fr 1fr; } .g3 > :first-child { grid-column: 1 / -1; } .g4 { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 640px) {
+  .wrap { padding: 18px 16px 40px; }
+  .g3, .g2 { grid-template-columns: 1fr; }
+  h1 { font-size: 28px; }
+  .meta { text-align: left; }
+  .big { font-size: 54px; }
+  .tile .big { font-size: 36px; }
+  .ready { flex-direction: column; align-items: stretch; }
+  .ring { align-self: center; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="eyebrow">Training dashboard</div>
+      <h1>Road to HYROX <span id="season"></span></h1>
+    </div>
+    <div class="meta" id="meta"></div>
+  </header>
+
+  <div class="grid g3">
+    <section class="card" id="raceCard"></section>
+    <section class="card" id="readyCard"></section>
+    <section class="card" id="formCard"></section>
+  </div>
+
+  <h2>This week vs recent weeks</h2>
+  <div class="grid g4" id="tiles"></div>
+  <div class="grid g2" style="margin-top:14px">
+    <section class="card">
+      <h3>Training time per week</h3>
+      <div class="sub">Hours by sport. Hover a week for sessions and distance.</div>
+      <div class="legend" id="wkLegend"></div>
+      <div class="chart" id="wkChart"></div>
+    </section>
+    <section class="card">
+      <h3>By sport: this week vs your 4-week average</h3>
+      <div class="sub" id="sportSub"></div>
+      <div id="sportTable"></div>
+    </section>
+  </div>
+
+  <h2>Readiness &amp; peak condition</h2>
+  <div class="grid g2">
+    <section class="card">
+      <h3>Daily readiness</h3>
+      <div class="sub" id="readySub"></div>
+      <div class="chart" id="readyChart"></div>
+    </section>
+    <section class="card">
+      <h3>Form: how fresh you are</h3>
+      <div class="sub">Fitness minus fatigue, as % of fitness. Race in the fresh zone; build in the productive zone.</div>
+      <div class="chart" id="formChart"></div>
+    </section>
+    <section class="card">
+      <h3>Fitness &amp; fatigue</h3>
+      <div class="sub">Fitness is your 6-week training load average; fatigue is the last week's. Fitness rising = getting stronger.</div>
+      <div class="legend"><span><i class="ln" style="background:var(--fitness)"></i>Fitness</span><span><i class="ln" style="background:var(--fatigue)"></i>Fatigue</span></div>
+      <div class="chart" id="ffChart"></div>
+    </section>
+    <section class="card">
+      <h3>Training load per day</h3>
+      <div class="sub">Garmin's load for each day's sessions, coloured by the day's main sport.</div>
+      <div class="legend" id="loadLegend"></div>
+      <div class="chart" id="loadChart"></div>
+    </section>
+  </div>
+
+  <h2>Recovery signals</h2>
+  <div class="grid g2">
+    <section class="card">
+      <h3>HRV overnight</h3>
+      <div class="sub">Shaded band is your balanced range from Garmin. Below it = under-recovered.</div>
+      <div class="chart" id="hrvChart"></div>
+    </section>
+    <section class="card">
+      <h3>Resting heart rate</h3>
+      <div class="sub">Lower is better. A jump of 5+ bpm usually means fatigue, stress or illness.</div>
+      <div class="chart" id="rhrChart"></div>
+    </section>
+    <section class="card">
+      <h3>Sleep</h3>
+      <div class="sub">Hours asleep each night. Hover for score and stages.</div>
+      <div class="chart" id="sleepChart"></div>
+    </section>
+    <section class="card">
+      <h3>Running pace</h3>
+      <div class="sub">Average pace per run (higher = faster). Hyrox is 8 × 1 km, so this is your race engine.</div>
+      <div class="chart" id="paceChart"></div>
+    </section>
+  </div>
+
+  <h2>Records &amp; biggest days</h2>
+  <div class="grid g2">
+    <section class="card"><div class="records" id="records"></div></section>
+    <section class="card">
+      <h3>Hardest sessions</h3>
+      <div class="sub">Top 5 by training load</div>
+      <div id="hardest"></div>
+    </section>
+  </div>
+
+  <footer id="foot"></footer>
+</div>
+<div id="tip"></div>
+
+<script id="data" type="application/json">__DATA__</script>
+<script>
+const D = JSON.parse(document.getElementById('data').textContent);
+const NS = 'http://www.w3.org/2000/svg';
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const SPORT_COLOR = { Running: css('--run'), HIIT: css('--hiit'), Strength: css('--strength'), Other: css('--other') };
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const parse = s => new Date(s + 'T00:00:00');
+const fmtD = s => { const d = parse(s); return `${DOW[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]}`; };
+const fmtShort = s => { const d = parse(s); return `${d.getDate()} ${MONTHS[d.getMonth()]}`; };
+const daysBetween = (a, b) => Math.round((parse(b) - parse(a)) / 864e5);
+const addDays = (s, n) => { const d = parse(s); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
+const pace = p => p == null ? '–' : `${Math.floor(p)}:${String(Math.round(p % 1 * 60)).padStart(2, '0')}`;
+const hm = h => { const m = Math.round(h * 60); return m >= 60 ? `${Math.floor(m / 60)}h ${String(m % 60).padStart(2, '0')}m` : `${m}m`; };
+const $ = id => document.getElementById(id);
+const last = arr => { for (let i = arr.length - 1; i >= 0; i--) if (arr[i] != null) return [arr[i], i]; return [null, -1]; };
+const avg = a => { const v = a.filter(x => x != null); return v.length ? v.reduce((s, x) => s + x, 0) / v.length : null; };
+
+function svgEl(tag, attrs, parent) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+
+// ---------- tooltip ----------
+const tip = $('tip');
+function showTip(html, ev) {
+  tip.innerHTML = html; tip.style.display = 'block';
+  const r = tip.getBoundingClientRect();
+  let x = ev.clientX + 14, y = ev.clientY + 14;
+  if (x + r.width > innerWidth - 8) x = ev.clientX - r.width - 14;
+  if (x < 8) x = 8;
+  if (y + r.height > innerHeight - 8) y = ev.clientY - r.height - 14;
+  tip.style.left = x + 'px'; tip.style.top = y + 'px';
+}
+const hideTip = () => tip.style.display = 'none';
+const row = (label, value, color) => `<div class="r"><span>${color ? `<i style="background:${color}"></i>` : ''}${label}</span><b>${value}</b></div>`;
+
+// ---------- scales ----------
+function niceTicks(min, max, count = 4) {
+  const span = max - min || 1;
+  const step0 = span / count, mag = Math.pow(10, Math.floor(Math.log10(step0)));
+  const step = [1, 2, 2.5, 5, 10].map(m => m * mag).find(s => s >= step0);
+  const lo = Math.floor(min / step) * step, hi = Math.ceil(max / step) * step;
+  const t = []; for (let v = lo; v <= hi + step / 2; v += step) t.push(+v.toFixed(6));
+  return t;
+}
+
+function frame(host, o) {
+  host.innerHTML = '';
+  const W = Math.max(280, host.clientWidth), H = o.height || 190;
+  const m = { l: 34, r: o.right ?? 34, t: 10, b: 24 };
+  const svg = svgEl('svg', { width: W, height: H, viewBox: `0 0 ${W} ${H}` }, host);
+  const ticks = niceTicks(o.min, o.max);
+  const y0 = o.fixed ? o.min : ticks[0], y1 = o.fixed ? o.max : ticks[ticks.length - 1];
+  const iw = W - m.l - m.r, ih = H - m.t - m.b;
+  const y = v => o.invert ? m.t + (v - y0) / (y1 - y0) * ih : m.t + ih - (v - y0) / (y1 - y0) * ih;
+  const n = o.n;
+  const x = o.band ? i => m.l + (i + 0.5) * iw / n : i => m.l + (n <= 1 ? iw / 2 : i * iw / (n - 1));
+  (o.zones || []).forEach(z => {
+    const a = y(Math.min(Math.max(z.from, y0), y1)), b = y(Math.min(Math.max(z.to, y0), y1));
+    svgEl('rect', { x: m.l, y: Math.min(a, b), width: iw, height: Math.abs(a - b), fill: z.color, opacity: z.op ?? 0.08 }, svg);
+    if (z.label && Math.abs(a - b) > 14) { const t = svgEl('text', { x: m.l + 6, y: Math.min(a, b) + 12, 'text-anchor': 'start', style: `fill:${z.color};opacity:.85;font-size:10px` }, svg); t.textContent = z.label; }
+  });
+  (o.fixed ? o.ticks || ticks.filter(t => t >= y0 && t <= y1) : ticks).forEach(t => {
+    svgEl('line', { x1: m.l, x2: m.l + iw, y1: y(t), y2: y(t), stroke: css('--grid'), 'stroke-width': 1 }, svg);
+    const tx = svgEl('text', { x: m.l - 6, y: y(t) + 4, 'text-anchor': 'end' }, svg); tx.textContent = o.yFmt ? o.yFmt(t) : t;
+  });
+  // x labels: first of each month (daily) or every few weeks
+  const labels = o.xLabels;
+  let lastX = -99;
+  labels.forEach((s, i) => {
+    const d = parse(s), prev = i ? parse(labels[i - 1]) : null;
+    const isNew = !prev || d.getMonth() !== prev.getMonth();
+    if (!isNew) return;
+    const px = x(i);
+    if (px - lastX < 40 || px > m.l + iw - 10) return;
+    lastX = px;
+    const t = svgEl('text', { x: px, y: H - 6, 'text-anchor': i === 0 ? 'start' : 'middle' }, svg); t.textContent = MONTHS[d.getMonth()];
+  });
+  return { svg, W, H, m, iw, ih, x, y, y0, y1 };
+}
+
+function hover(f, n, onMove) {
+  const cross = svgEl('line', { y1: f.m.t, y2: f.m.t + f.ih, stroke: css('--text-2'), 'stroke-width': 1, opacity: 0 }, f.svg);
+  const layer = svgEl('g', {}, f.svg);
+  const hit = svgEl('rect', { x: f.m.l, y: 0, width: f.iw, height: f.H, fill: 'transparent' }, f.svg);
+  const pick = ev => {
+    const r = f.svg.getBoundingClientRect(), px = ev.clientX - r.left;
+    let best = 0, bd = 1e9;
+    for (let i = 0; i < n; i++) { const d = Math.abs(f.x(i) - px); if (d < bd) { bd = d; best = i; } }
+    return best;
+  };
+  const move = ev => {
+    const i = pick(ev);
+    cross.setAttribute('x1', f.x(i)); cross.setAttribute('x2', f.x(i)); cross.setAttribute('opacity', .5);
+    layer.innerHTML = '';
+    const html = onMove(i, layer);
+    if (html) showTip(html, ev); else hideTip();
+  };
+  hit.addEventListener('pointermove', move);
+  hit.addEventListener('pointerdown', move);
+  hit.addEventListener('pointerleave', () => { cross.setAttribute('opacity', 0); layer.innerHTML = ''; hideTip(); });
+}
+
+function linePath(vals, f) {
+  let d = '', pen = false;
+  vals.forEach((v, i) => {
+    if (v == null) { pen = false; return; }
+    d += (pen ? 'L' : 'M') + f.x(i).toFixed(1) + ',' + f.y(v).toFixed(1); pen = true;
+  });
+  return d;
+}
+
+// o: {dates, series:[{name,color,values,fmt}], band:{lo,hi}, zones, min,max, height, dots, invert, tipExtra(i)}
+function lineChart(host, o) {
+  const allV = o.series.flatMap(s => s.values).concat(o.band ? o.band.lo.concat(o.band.hi) : []).filter(v => v != null);
+  if (!allV.length) { host.innerHTML = '<div class="label">No data yet</div>'; return; }
+  let mn = o.min ?? Math.min(...allV), mx = o.max ?? Math.max(...allV);
+  if (o.min == null) mn -= (mx - mn) * 0.08 || 1;
+  if (o.max == null) mx += (mx - mn) * 0.08 || 1;
+  const f = frame(host, { ...o, n: o.dates.length, min: mn, max: mx, xLabels: o.dates });
+  if (o.band) {
+    let d = ''; const { lo, hi } = o.band; let seg = [];
+    const flush = () => { if (seg.length > 1) d += 'M' + seg.map(i => f.x(i) + ',' + f.y(hi[i])).join('L') + 'L' + seg.slice().reverse().map(i => f.x(i) + ',' + f.y(lo[i])).join('L') + 'Z'; seg = []; };
+    lo.forEach((v, i) => { if (v != null && hi[i] != null) seg.push(i); else flush(); }); flush();
+    svgEl('path', { d, fill: o.band.color || css('--text-2'), opacity: 0.12 }, f.svg);
+  }
+  const usedY = [];
+  o.series.forEach(s => {
+    if (!o.dots) svgEl('path', { d: linePath(s.values, f), fill: 'none', stroke: s.color, 'stroke-width': 2, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }, f.svg);
+    if (o.dots) {
+      svgEl('path', { d: linePath(s.values, f), fill: 'none', stroke: s.color, 'stroke-width': 1, opacity: 0.35 }, f.svg);
+      s.values.forEach((v, i) => v != null && svgEl('circle', { cx: f.x(i), cy: f.y(v), r: 4, fill: s.color, stroke: css('--card'), 'stroke-width': 2 }, f.svg));
+    }
+    const [lv, li] = last(s.values);
+    if (lv != null && o.endLabel !== false) {
+      svgEl('circle', { cx: f.x(li), cy: f.y(lv), r: 4, fill: s.color, stroke: css('--card'), 'stroke-width': 2 }, f.svg);
+      let ly = f.y(lv) + 4;
+      usedY.forEach(u => { if (Math.abs(u - ly) < 12) ly = u + (ly >= u ? 12 : -12); });
+      usedY.push(ly);
+      const t = svgEl('text', { x: f.x(li) + 8, y: ly, style: 'fill:var(--text);font-weight:600' }, f.svg);
+      t.textContent = (s.fmt || (v => v))(lv);
+    }
+  });
+  hover(f, o.dates.length, (i, layer) => {
+    let rows = '';
+    o.series.forEach(s => {
+      const v = s.values[i];
+      if (v != null) svgEl('circle', { cx: f.x(i), cy: f.y(v), r: 5, fill: s.color, stroke: css('--card'), 'stroke-width': 2 }, layer);
+      rows += row(s.name, v == null ? '–' : (s.fmt || (v => v))(v), o.series.length > 1 ? s.color : null);
+    });
+    const extra = o.tipExtra ? o.tipExtra(i) : '';
+    return `<div class="t">${o.tipTitle ? o.tipTitle(i) : fmtD(o.dates[i])}</div>${rows}${extra}`;
+  });
+}
+
+function topRounded(x, y, w, h, r) {
+  r = Math.min(r, w / 2, h);
+  return `M${x},${y + h}V${y + r}Q${x},${y} ${x + r},${y}H${x + w - r}Q${x + w},${y} ${x + w},${y + r}V${y + h}Z`;
+}
+
+// o: {labels, stacks:[{name,color,values}], height, yFmt, tip(i), highlight}
+function barChart(host, o) {
+  const n = o.labels.length;
+  const totals = o.labels.map((_, i) => o.stacks.reduce((s, st) => s + (st.values[i] || 0), 0));
+  const mx = Math.max(1, ...totals);
+  const f = frame(host, { ...o, n, min: 0, max: mx * 1.05, band: true, xLabels: o.labels, right: 12 });
+  const slot = f.iw / n, bw = Math.max(1.5, Math.min(28, slot * (n > 60 ? 0.7 : 0.62)));
+  const gap = n > 60 ? 0 : 2;
+  for (let i = 0; i < n; i++) {
+    let base = 0;
+    const segs = o.stacks.map(st => ({ v: st.values[i] || 0, c: typeof st.color === 'function' ? st.color(i) : st.color })).filter(s => s.v > 0);
+    segs.forEach((s, k) => {
+      const yTop = f.y(base + s.v), yBot = f.y(base);
+      const h = Math.max(0, yBot - yTop - (k ? gap : 0));
+      const x = f.x(i) - bw / 2;
+      const isTop = k === segs.length - 1;
+      const attrs = { fill: s.c, opacity: o.highlight != null && o.highlight !== i ? 0.75 : 1 };
+      if (isTop) svgEl('path', { d: topRounded(x, yTop, bw, h, n > 60 ? 1.5 : 4), ...attrs }, f.svg);
+      else svgEl('rect', { x, y: yTop, width: bw, height: h, ...attrs }, f.svg);
+      base += s.v;
+    });
+  }
+  hover(f, n, (i, layer) => {
+    svgEl('rect', { x: f.x(i) - slot / 2, y: f.m.t, width: slot, height: f.ih, fill: css('--text'), opacity: 0.05 }, layer);
+    return o.tip(i);
+  });
+}
+
+// ---------- header ----------
+const pulled = D.pulledAt ? new Date(D.pulledAt) : null;
+$('meta').innerHTML = `${pulled ? `Updated ${fmtD(D.pulledAt.slice(0, 10))}, ${D.pulledAt.slice(11, 16)}` : ''}` +
+  (D.fitnessAge ? `<span class="chip">Fitness age <b>${D.fitnessAge.toFixed(1)}</b> vs ${D.age}</span>` : '');
+const upcoming = D.races.filter(r => r.date >= D.today);
+$('season').textContent = upcoming.length ? parse(upcoming[0].date).getFullYear() : '';
+
+// ---------- race card ----------
+(function () {
+  const el = $('raceCard');
+  if (!upcoming.length) { el.innerHTML = `<h3>${D.goal}</h3><div class="sub">No upcoming race set. Add one in build.py.</div>`; return; }
+  const next = upcoming[0], dLeft = daysBetween(D.today, next.date);
+  const taperStart = addDays(next.date, -D.taperDays);
+  const phase = dLeft <= 0 ? 'Race day' : dLeft <= D.taperDays ? 'Taper' : dLeft <= 28 ? 'Peak build' : 'Build';
+  const span = daysBetween(D.today, upcoming[upcoming.length - 1].date) || 1;
+  const pos = s => Math.max(0, Math.min(100, daysBetween(D.today, s) / span * 100));
+  el.innerHTML = `
+    <div class="eyebrow">Next race · ${phase} phase</div>
+    <div class="race-next"><div class="big">${dLeft}<small>days</small></div>
+      <div><div style="font-weight:600;font-size:16px">${next.name}</div><div class="label">${fmtD(next.date)} ${parse(next.date).getFullYear()}</div></div></div>
+    <div class="timeline"><div class="bar"></div>
+      ${upcoming.map(r => `<div class="taper" style="left:${pos(addDays(r.date, -D.taperDays))}%;width:${pos(r.date) - pos(addDays(r.date, -D.taperDays))}%"></div>`).join('')}
+      <div class="now" style="left:0"></div>
+      ${upcoming.map((r, k) => `<div class="dot" style="left:${pos(r.date)}%"></div>` + (k && pos(r.date) - pos(upcoming[k - 1].date) < 12 ? '' : `<div class="tl" style="left:${pos(r.date)}%">${fmtShort(r.date)}</div>`)).join('')}
+    </div>
+    <div class="race-list">${upcoming.map(r => `<div class="race-row"><span>${r.name} · ${fmtD(r.date)} ${parse(r.date).getFullYear()}</span><span>${daysBetween(D.today, r.date)} days</span></div>`).join('')}</div>
+    <div class="advice">Goal: <b>${D.goal}</b>. ${dLeft > D.taperDays ? `Taper starts <b>${fmtD(taperStart)}</b> (amber on the timeline): cut volume ~40%, keep some intensity.` : `You're in the taper. Keep sessions short and sharp, and protect your sleep.`}</div>`;
+})();
+
+// ---------- readiness card ----------
+function readyStatus(v) {
+  if (v == null) return { label: 'No data', color: css('--muted'), tip: '' };
+  if (v >= 75) return { label: 'Primed', color: css('--good'), tip: 'Good day for a hard session or race simulation.' };
+  if (v >= 50) return { label: 'Ready', color: css('--warning'), tip: 'Train as planned. Moderate intensity is safest.' };
+  if (v >= 30) return { label: 'Go easy', color: css('--serious'), tip: 'Recovery is lagging. Keep it easy or technique-focused.' };
+  return { label: 'Rest', color: css('--critical'), tip: 'Your body is asking for a rest day.' };
+}
+(function () {
+  const [v, i] = last(D.readiness);
+  const st = readyStatus(v);
+  const parts = i >= 0 ? D.parts[i] : {};
+  const R = 54, C = 2 * Math.PI * R, arc = 0.75;
+  const val = v == null ? 0 : v / 100;
+  const ring = `<svg class="ring" width="140" height="140" viewBox="0 0 140 140">
+    <g transform="rotate(135 70 70)">
+      <circle cx="70" cy="70" r="${R}" fill="none" stroke="${css('--line')}" stroke-width="10" stroke-linecap="round" stroke-dasharray="${C * arc} ${C}"/>
+      <circle cx="70" cy="70" r="${R}" fill="none" stroke="${st.color}" stroke-width="10" stroke-linecap="round" stroke-dasharray="${C * arc * val} ${C}"/>
+    </g>
+    <text x="70" y="78" text-anchor="middle" style="fill:var(--text);font-size:44px;font-weight:700">${v ?? '–'}</text>
+    <text x="70" y="104" text-anchor="middle" style="fill:var(--muted);font-size:13px;font-family:Inter">of 100</text></svg>`;
+  const labels = { 'HRV': `${D.hrv[i] ?? '–'} ms`, 'Sleep': `${D.sleepScore[i] ?? '–'}`, 'Body Battery': `${D.bb[i] ?? '–'}`, 'Resting HR': `${D.rhr[i] ?? '–'} bpm`, 'Load balance': '' };
+  $('readyCard').innerHTML = `
+    <div class="eyebrow">Training readiness · ${i >= 0 ? fmtD(D.days[i]) : ''}</div>
+    <div class="ready" style="margin-top:8px">${ring}
+      <div class="parts">
+        <div class="status" style="margin-bottom:4px"><i style="background:${st.color}"></i>${st.label}</div>
+        ${Object.keys(labels).filter(k => parts[k] != null).map(k => `<div class="part" title="${labels[k]}"><span>${k}</span><div class="track"><div class="fill" style="width:${parts[k]}%"></div></div><b>${parts[k]}</b></div>`).join('')}
+      </div></div>
+    <div class="advice">${st.tip} <span style="color:var(--muted)">HRV ${labels.HRV} · RHR ${labels['Resting HR']} · Sleep score ${labels.Sleep}</span></div>`;
+})();
+
+// ---------- form card ----------
+function formZone(v) {
+  if (v == null) return { label: '–', color: css('--muted') };
+  if (v > 25) return { label: 'Very fresh (losing fitness)', color: css('--warning') };
+  if (v > 5) return { label: 'Fresh: race-ready', color: css('--good') };
+  if (v > -10) return { label: 'Neutral', color: css('--text-2') };
+  if (v > -30) return { label: 'Building fitness', color: css('--run') };
+  return { label: 'Overreaching', color: css('--critical') };
+}
+(function () {
+  const [v, i] = last(D.form);
+  const z = formZone(v);
+  const fit = D.fitness[D.fitness.length - 1], fit4 = D.fitness[Math.max(0, D.fitness.length - 29)];
+  const trend = fit - fit4;
+  const peakTxt = D.peak ? `Your peak stretch so far: <b>${fmtShort(D.peak.from)} – ${fmtShort(D.peak.to)}</b>, average readiness ${D.peak.avg}.` : '';
+  $('formCard').innerHTML = `
+    <div class="eyebrow">Form · peak condition</div>
+    <div class="race-next"><div class="big">${v == null ? '–' : (v > 0 ? '+' : '') + Math.round(v)}<small>%</small></div>
+      <div><div class="status"><i style="background:${z.color}"></i>${z.label}</div>
+      <div class="label">Fitness ${fit.toFixed(0)} · ${trend >= 0 ? '▲' : '▼'} ${Math.abs(trend).toFixed(0)} in 4 weeks</div></div></div>
+    <div class="advice">On race day aim for <b>+5% to +25%</b>. Building in the −10% to −30% zone is how you get stronger. ${peakTxt}</div>`;
+})();
+
+// ---------- this week ----------
+const W = D.weeks, cur = W[W.length - 1], prev4 = W.slice(-5, -1);
+const totalsOf = w => ({
+  n: D.sports.reduce((s, k) => s + w.sports[k].n, 0),
+  h: D.sports.reduce((s, k) => s + w.sports[k].h, 0),
+  km: w.sports.Running.km, load: w.load,
+});
+(function () {
+  const t = totalsOf(cur), p = prev4.map(totalsOf);
+  const pa = k => p.length ? p.reduce((s, x) => s + x[k], 0) / p.length : null;
+  const dayNo = (parse(D.today).getDay() + 6) % 7 + 1;
+  const tile = (label, value, unit, k, fmt) => {
+    const a = pa(k);
+    return `<div class="card tile"><div class="label">${label}</div><div class="big" style="margin-top:8px">${value}<small>${unit}</small></div>
+      <div class="delta">4-wk avg <b>${a == null ? '–' : fmt(a)}</b>${unit ? ' ' + unit : ''} · day ${dayNo} of 7</div></div>`;
+  };
+  $('tiles').innerHTML =
+    tile('Sessions this week', t.n, '', 'n', x => x.toFixed(1)) +
+    tile('Training time', t.h.toFixed(1), 'h', 'h', x => x.toFixed(1)) +
+    tile('Run distance', t.km.toFixed(1), 'km', 'km', x => x.toFixed(1)) +
+    tile('Training load', t.load, '', 'load', x => Math.round(x));
+  $('sportSub').textContent = `Week of ${fmtShort(cur.start)} so far (day ${dayNo} of 7) vs the 4 full weeks before.`;
+  const rowsH = D.sports.filter(k => cur.sports[k].n || prev4.some(w => w.sports[k].n)).map(k => {
+    const a = f => prev4.length ? prev4.reduce((s, w) => s + w.sports[k][f], 0) / prev4.length : 0;
+    const dist = k === 'Running' ? `${cur.sports[k].km.toFixed(1)} <span style="color:var(--muted)">/ ${a('km').toFixed(1)} km</span>` : '–';
+    return `<tr><td><span class="sw" style="background:${SPORT_COLOR[k]}"></span>${k}</td>
+      <td class="n">${cur.sports[k].n} <span style="color:var(--muted)">/ ${a('n').toFixed(1)}</span></td>
+      <td class="n">${hm(cur.sports[k].h)} <span style="color:var(--muted)">/ ${hm(a('h'))}</span></td>
+      <td class="n">${dist}</td></tr>`;
+  }).join('');
+  $('sportTable').innerHTML = `<table><thead><tr><th>Sport</th><th class="n">Sessions</th><th class="n">Time</th><th class="n">Distance</th></tr></thead><tbody>${rowsH}</tbody></table>
+    <div class="label" style="margin-top:10px">Format: this week <span style="color:var(--muted)">/ 4-week average</span></div>`;
+})();
+
+const legendHTML = () => D.sports.map(k => `<span><i style="background:${SPORT_COLOR[k]}"></i>${k}</span>`).join('');
+$('wkLegend').innerHTML = legendHTML();
+$('loadLegend').innerHTML = legendHTML();
+
+// main sport of each day (most load) for colouring daily load bars
+const mainSport = D.days.map(d => {
+  const a = D.actsByDay[d] || []; if (!a.length) return null;
+  const by = {}; a.forEach(x => by[x.sport] = (by[x.sport] || 0) + x.load + 0.01);
+  return Object.keys(by).sort((p, q) => by[q] - by[p])[0];
+});
+
+function renderCharts() {
+  hideTip();
+  barChart($('wkChart'), {
+    labels: W.map(w => w.start), height: 210, yFmt: v => v + 'h', highlight: W.length - 1,
+    stacks: D.sports.map(k => ({ name: k, color: SPORT_COLOR[k], values: W.map(w => w.sports[k].h) })),
+    tip: i => {
+      const w = W[i], t = totalsOf(w);
+      return `<div class="t">Week of ${fmtShort(w.start)}${i === W.length - 1 ? ' (so far)' : ''}</div>` +
+        D.sports.filter(k => w.sports[k].n).map(k => row(`${k} ×${w.sports[k].n}`, hm(w.sports[k].h) + (k === 'Running' ? ` · ${w.sports[k].km.toFixed(1)} km` : ''), SPORT_COLOR[k])).join('') +
+        `<div style="border-top:1px solid #34363b;margin:6px 0 4px"></div>` + row('Total', `${hm(t.h)} · ${t.n} sessions`) + row('Load', t.load);
+    },
+  });
+
+  const rs = v => readyStatus(v);
+  lineChart($('readyChart'), {
+    dates: D.days, height: 200, min: 0, max: 100, fixed: true, ticks: [0, 30, 50, 75, 100],
+    zones: [{ from: 75, to: 100, color: css('--good'), label: 'Primed' }, { from: 50, to: 75, color: css('--warning'), label: 'Ready' },
+            { from: 30, to: 50, color: css('--serious'), label: 'Go easy' }, { from: 0, to: 30, color: css('--critical'), label: 'Rest' }],
+    series: [{ name: 'Readiness', color: css('--signal'), values: D.readiness }],
+    tipExtra: i => {
+      const p = D.parts[i] || {}, s = rs(D.readiness[i]);
+      return (D.readiness[i] != null ? row('Status', `<span style="color:${s.color}">●</span> ${s.label}`) : '') +
+        Object.keys(p).map(k => row(k, p[k])).join('');
+    },
+  });
+
+  lineChart($('formChart'), {
+    dates: D.days, height: 200, min: -50, max: 40, fixed: true, ticks: [-30, -10, 5, 25],
+    yFmt: v => (v > 0 ? '+' : '') + v + '%',
+    zones: [{ from: 25, to: 40, color: css('--warning'), label: 'Too fresh' }, { from: 5, to: 25, color: css('--good'), label: 'Fresh · race' },
+            { from: -30, to: -10, color: css('--run'), label: 'Productive' }, { from: -50, to: -30, color: css('--critical'), label: 'Overreaching' }],
+    series: [{ name: 'Form', color: css('--signal'), values: D.form.map(v => v == null ? null : Math.max(-50, Math.min(40, v))), fmt: v => (v > 0 ? '+' : '') + Math.round(v) + '%' }],
+    tipExtra: i => row('Zone', formZone(D.form[i]).label) + row('Fitness', D.fitness[i].toFixed(0)) + row('Fatigue', D.fatigue[i].toFixed(0)),
+  });
+
+  lineChart($('ffChart'), {
+    dates: D.days, height: 200, min: 0,
+    series: [{ name: 'Fitness', color: css('--fitness'), values: D.fitness, fmt: v => Math.round(v) },
+             { name: 'Fatigue', color: css('--fatigue'), values: D.fatigue, fmt: v => Math.round(v) }],
+    tipExtra: i => row('Load that day', D.load[i]),
+  });
+
+  barChart($('loadChart'), {
+    labels: D.days, height: 200,
+    stacks: [{ name: 'Load', color: i => SPORT_COLOR[mainSport[i]] || css('--muted'), values: D.load }],
+    tip: i => {
+      const a = D.actsByDay[D.days[i]] || [];
+      return `<div class="t">${fmtD(D.days[i])}</div>` + (a.length ? a.map(x => row(x.name || x.type, `${x.load} · ${Math.round(x.min)}m`, SPORT_COLOR[x.sport])).join('') + row('Day total', D.load[i]) : row('Rest day', ''));
+    },
+  });
+
+  lineChart($('hrvChart'), {
+    dates: D.days, height: 200,
+    band: { lo: D.hrvLo, hi: D.hrvHi, color: css('--good') },
+    series: [{ name: 'HRV', color: css('--signal'), values: D.hrv, fmt: v => v + ' ms' }],
+    tipExtra: i => (D.hrvLo[i] ? row('Balanced range', `${D.hrvLo[i]}–${D.hrvHi[i]} ms`) : '') + (D.hrvStatus[i] ? row('Status', D.hrvStatus[i].toLowerCase()) : ''),
+  });
+
+  const rhr7 = D.rhr.map((_, i) => { const v = avg(D.rhr.slice(Math.max(0, i - 6), i + 1)); return v == null ? null : Math.round(v * 10) / 10; });
+  lineChart($('rhrChart'), {
+    dates: D.days, height: 200,
+    series: [{ name: 'Resting HR', color: css('--fatigue'), values: D.rhr, fmt: v => v + ' bpm' },
+             { name: '7-day avg', color: css('--signal'), values: rhr7, fmt: v => v.toFixed(1) }],
+    endLabel: false,
+  });
+
+  barChart($('sleepChart'), {
+    labels: D.days, height: 200, yFmt: v => v + 'h',
+    stacks: [{ name: 'Sleep', color: i => { const s = D.sleepScore[i]; return s == null ? css('--muted') : s >= 80 ? css('--run') : s >= 60 ? '#2a5ea3' : '#2b3a52'; }, values: D.sleepH.map(v => v || 0) }],
+    tip: i => {
+      const st = D.sleepStages[i];
+      if (!D.sleepH[i]) return `<div class="t">${fmtD(D.days[i])}</div>${row('No sleep data', '')}`;
+      return `<div class="t">Night before ${fmtD(D.days[i])}</div>` + row('Asleep', hm(D.sleepH[i])) + row('Score', D.sleepScore[i] ?? '–') +
+        (st ? row('Deep', hm(st[0])) + row('REM', hm(st[1])) + row('Light', hm(st[2])) + row('Awake', hm(st[3])) : '');
+    },
+  });
+
+  const runs = D.runs;
+  lineChart($('paceChart'), {
+    dates: runs.map(r => r.date), height: 200, invert: true, dots: true, endLabel: false,
+    yFmt: v => pace(v),
+    series: [{ name: 'Pace', color: css('--run'), values: runs.map(r => r.pace), fmt: v => pace(v) + ' /km' }],
+    tipTitle: i => `${fmtD(runs[i].date)} · ${runs[i].type}`,
+    tipExtra: i => row('Distance', runs[i].km.toFixed(2) + ' km') + (runs[i].avgHR ? row('Avg HR', Math.round(runs[i].avgHR) + ' bpm') : ''),
+  });
+}
+
+// readiness subtitle
+$('readySub').innerHTML = `My estimate from HRV, sleep score, Body Battery, resting HR and load balance (0–100).` +
+  (D.peak ? ` Best week: ${fmtShort(D.peak.from)}–${fmtShort(D.peak.to)} (avg ${D.peak.avg}).` : '');
+
+// records
+$('records').innerHTML = D.records.map(r => `<div class="rec"><div class="label">${r.label}</div><div class="v">${r.value}</div>
+  <div class="w">${/^\d{4}-/.test(r.when) ? fmtD(r.when) : r.when.replace(/(\d{4}-\d{2}-\d{2})/, m => fmtShort(m))}${r.note ? ' · ' + r.note : ''}</div></div>`).join('');
+$('hardest').innerHTML = `<table><thead><tr><th>Date</th><th>Session</th><th class="n">Time</th><th class="n">Avg HR</th><th class="n">Load</th></tr></thead><tbody>` +
+  D.hardest.map(a => `<tr><td>${fmtShort(a.date)}</td><td><span class="sw" style="background:${SPORT_COLOR[a.sport]}"></span>${a.name || a.type}</td>
+    <td class="n">${hm(a.min / 60)}</td><td class="n">${a.avgHR ? Math.round(a.avgHR) : '–'}</td><td class="n"><b>${a.load}</b></td></tr>`).join('') + '</tbody></table>';
+
+$('foot').innerHTML = `Readiness and form are calculated here from your Garmin data (the Personal API doesn't share Garmin's own Training Readiness score).
+  Readiness weights: HRV 30%, sleep 25%, Body Battery 20%, load balance 15%, resting HR 10%. Form uses a 42-day fitness and 7-day fatigue average of Garmin training load.
+  Data from ${fmtD(D.days[0])} ${D.days[0].slice(0, 4)} to ${fmtD(D.today)}.`;
+
+renderCharts();
+let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(renderCharts, 150); });
+document.addEventListener('scroll', hideTip, { passive: true });
+</script>
+</body>
+</html>
