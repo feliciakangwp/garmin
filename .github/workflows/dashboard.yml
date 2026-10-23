@@ -1,0 +1,61 @@
+name: Update dashboard
+
+on:
+  schedule:
+    - cron: "17 */3 * * *"   # every 3 hours
+  workflow_dispatch:          # "Run workflow" button for an instant update
+  push:
+    branches: [claude/brave-volta-fmhco2]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    env:
+      TZ: Asia/Singapore
+    steps:
+      - name: Check setup
+        id: setup
+        env:
+          KEY: ${{ secrets.GARMIN_PERSONAL_API_KEY }}
+          PW: ${{ secrets.DASHBOARD_PASSWORD }}
+        run: |
+          if [ -n "$KEY" ] && [ -n "$PW" ]; then echo "ready=yes" >> "$GITHUB_OUTPUT"
+          else echo "::notice::Add the GARMIN_PERSONAL_API_KEY and DASHBOARD_PASSWORD secrets to publish the dashboard."; fi
+      - uses: actions/checkout@v4
+        if: steps.setup.outputs.ready == 'yes'
+      - name: Install encryption library
+        if: steps.setup.outputs.ready == 'yes'
+        run: pip install --quiet cryptography
+      - name: Pull Garmin data
+        if: steps.setup.outputs.ready == 'yes'
+        working-directory: garmin-dashboard
+        env:
+          GARMIN_PERSONAL_API_KEY: ${{ secrets.GARMIN_PERSONAL_API_KEY }}
+        run: python3 pull.py --full
+      - name: Build and lock dashboard
+        if: steps.setup.outputs.ready == 'yes'
+        working-directory: garmin-dashboard
+        env:
+          DASHBOARD_PASSWORD: ${{ secrets.DASHBOARD_PASSWORD }}
+        run: |
+          python3 build.py
+          python3 encrypt.py
+      - uses: actions/upload-pages-artifact@v3
+        if: steps.setup.outputs.ready == 'yes'
+        with:
+          path: garmin-dashboard/site
+      - id: deploy
+        if: steps.setup.outputs.ready == 'yes'
+        uses: actions/deploy-pages@v4

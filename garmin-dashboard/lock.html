@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Training Dashboard</title>
+<style>
+:root { color-scheme: dark; --bg: #08090a; --card: #121315; --line: #24262a; --text: #f0efec; --text-2: #a9a8a1; --muted: #6f6e69; --accent: #3987e5; --critical: #e66767; }
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+body { display: grid; place-items: center; padding: 16px; }
+form { width: 100%; max-width: 360px; background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 26px 22px; }
+.eyebrow { font-size: 12px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+h1 { font-size: 24px; margin: 6px 0 18px; letter-spacing: .02em; text-transform: uppercase; }
+input[type=password] { width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--line); background: #0d0e10; color: var(--text); font-size: 16px; }
+input[type=password]:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+label.rem { display: flex; gap: 8px; align-items: center; margin: 12px 0 16px; color: var(--text-2); font-size: 13px; }
+button { width: 100%; padding: 12px; border: 0; border-radius: 10px; background: var(--text); color: #08090a; font-weight: 600; font-size: 15px; cursor: pointer; }
+button:disabled { opacity: .6; }
+#msg { min-height: 20px; margin-top: 12px; font-size: 13px; color: var(--critical); }
+</style>
+</head>
+<body>
+<form id="f">
+  <div class="eyebrow">Private</div>
+  <h1>Road to HYROX</h1>
+  <input type="password" id="pw" placeholder="Password" autocomplete="current-password" autofocus>
+  <label class="rem"><input type="checkbox" id="rem"> Remember on this device</label>
+  <button id="go">Unlock</button>
+  <div id="msg"></div>
+</form>
+<script>
+const SALT = "__SALT__", IV = "__IV__", ITER = __ITER__, DATA = "__DATA__";
+const STORE = "garmin-dash-pw";
+const bytes = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+
+async function unlock(pw) {
+  const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(pw), "PBKDF2", false, ["deriveKey"]);
+  const key = await crypto.subtle.deriveKey({ name: "PBKDF2", salt: bytes(SALT), iterations: ITER, hash: "SHA-256" },
+    base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
+  const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv: bytes(IV) }, key, bytes(DATA));
+  return new TextDecoder().decode(plain);
+}
+function show(html) { document.open(); document.write(html); document.close(); }
+
+const f = document.getElementById("f"), msg = document.getElementById("msg"), go = document.getElementById("go");
+f.addEventListener("submit", async e => {
+  e.preventDefault();
+  const pw = document.getElementById("pw").value;
+  go.disabled = true; msg.textContent = ""; go.textContent = "Unlocking…";
+  try {
+    const html = await unlock(pw);
+    try { if (document.getElementById("rem").checked) localStorage.setItem(STORE, pw); } catch (_) {}
+    show(html);
+  } catch (_) {
+    msg.textContent = "Wrong password. Try again.";
+    go.disabled = false; go.textContent = "Unlock";
+  }
+});
+(async () => {
+  let saved = null;
+  try { saved = localStorage.getItem(STORE); } catch (_) {}
+  if (!saved) return;
+  try { show(await unlock(saved)); } catch (_) { try { localStorage.removeItem(STORE); } catch (_) {} }
+})();
+</script>
+</body>
+</html>
