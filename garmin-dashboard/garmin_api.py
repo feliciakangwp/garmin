@@ -34,12 +34,14 @@ _CTX = _ssl_context()
 
 
 def read_key():
-    if not ENV_FILE.exists():
-        return ""
-    for line in ENV_FILE.read_text(encoding="utf-8").splitlines():
-        if line.startswith("GARMIN_PERSONAL_API_KEY="):
-            return line.split("=", 1)[1].strip().strip('"').strip("'")
-    return ""
+    """Key from .env.local, falling back to the environment (cloud sessions)."""
+    if ENV_FILE.exists():
+        for line in ENV_FILE.read_text(encoding="utf-8").splitlines():
+            if line.startswith("GARMIN_PERSONAL_API_KEY="):
+                key = line.split("=", 1)[1].strip().strip('"').strip("'")
+                if key:
+                    return key
+    return os.environ.get("GARMIN_PERSONAL_API_KEY", "").strip()
 
 
 def _request(url, method="GET", headers=None, timeout=60):
