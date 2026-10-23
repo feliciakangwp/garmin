@@ -2,3 +2,4 @@
 data/
 **/.env.local
 **/data/
+__pycache__/
